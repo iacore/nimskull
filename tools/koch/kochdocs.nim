@@ -62,6 +62,10 @@ proc exec*(cmd: string, errorcode: int = QuitFailure, additionalPath = "") =
   if execShellCmd(cmd) != 0: quit("FAILURE", errorcode)
   putEnv("PATH", prevPath)
 
+proc exec*(args: openArray[string], errorcode: int = QuitFailure, additionalPath = "") =
+  let cmd = quoteShellCommand(args)
+  exec(cmd, errorcode, additionalPath) # xxx: inline this
+
 template inFold*(desc, body) =
   if existsEnv("GITHUB_ACTIONS"):
     echo "::group::" & desc
@@ -71,15 +75,21 @@ template inFold*(desc, body) =
   if existsEnv("GITHUB_ACTIONS"):
     echo "::endgroup::"
 
-proc execFold*(desc, cmd: string, errorcode: int = QuitFailure, additionalPath = "") =
+proc execFold*(desc: string, args: openArray[string], errorcode: int = QuitFailure, additionalPath = "") =
   ## Execute shell command. Add log folding for various CI services.
+  let desc = if desc.len == 0: quoteShellCommand(args) else: desc
+  inFold(desc):
+    exec(args, errorcode, additionalPath)
+
+# xxx: remove this proc
+proc execFold*(desc: string, cmd: string, errorcode: int = QuitFailure, additionalPath = "") =
   let desc = if desc.len == 0: cmd else: desc
   inFold(desc):
     exec(cmd, errorcode, additionalPath)
 
-proc execCleanPath*(cmd: string,
-                   additionalPath = ""; errorcode: int = QuitFailure) =
+proc execCleanPath*(args: openArray[string], additionalPath = ""; errorcode: int = QuitFailure) =
   # simulate a poor man's virtual environment
+  let cmd = quoteShellCommand(args)
   let prevPath = getEnv("PATH")
   when defined(windows):
     let cleanPath = r"$1\system32;$1;$1\System32\Wbem" % getEnv"SYSTEMROOT"
@@ -90,25 +100,25 @@ proc execCleanPath*(cmd: string,
   if execShellCmd(cmd) != 0: quit("FAILURE", errorcode)
   putEnv("PATH", prevPath)
 
-proc nimexec*(cmd: string) =
+proc nimexec*(args: openArray[string]) =
   # Consider using `nimCompile` instead
-  exec findNim().quoteShell() & " " & cmd
+  let cmd = quoteShellCommand(args)
+  exec @[findNim()] & @args
 
-proc nimexecFold*(desc, cmd: string) =
+proc nimexecFold*(desc: string, args: openArray[string]) =
   # nimexec but with execFold
-  execFold desc:
-    findNim().quoteShell() & " " & cmd
+  let cmd = quoteShellCommand(args)
+  execFold desc, @[findNim()] & @args
+    
 
-proc nimCompile*(input: string, outputDir = "bin", mode = "c", options = "") =
+proc nimCompile*(input: string, outputDir = "bin", mode = "c", options: openArray[string] = []) =
   let output = outputDir / input.splitFile.name.exe
-  let cmd = findNim().quoteShell() & " " & mode & " -o:" & output & " " & options & " " & input
-  exec cmd
+  exec @[findNim(), mode, "-o:" & output] & @options & @[input]
 
-proc nimCompileFold*(desc, input: string, outputDir = "bin", mode = "c", options = "", outputName = "") =
+proc nimCompileFold*(desc, input: string, outputDir = "bin", mode = "c", options: openArray[string] = [], outputName = "") =
   let outputName2 = if outputName.len == 0: input.splitFile.name.exe else: outputName.exe
   let output = outputDir / outputName2
-  let cmd = findNim().quoteShell() & " " & mode & " -o:" & output & " " & options & " " & input
-  execFold(desc, cmd)
+  execFold desc, @[findNim(), mode, "-o:" & output] & @options & @[input]
 
 func cmpBase(a, b: Version): int =
   ## Compare only the base version of `a` and `b`.

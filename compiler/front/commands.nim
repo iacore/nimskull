@@ -169,7 +169,7 @@ proc processArgument*(pass: TCmdLinePass; p: OptParser;
       config.setCmd cmdNimscript
       incl(config, optWasNimscript)
       config.projectName = unixToNativePath(p.key)
-      config.arguments = cmdLineRest(p)
+      config.arguments = remainingArgs(p)
       result = true
     elif pass != passCmd2: setCommandEarly(config, p.key)
   else:
@@ -178,7 +178,7 @@ proc processArgument*(pass: TCmdLinePass; p: OptParser;
       # support UNIX style filenames everywhere for portable build scripts:
       if config.projectName.len == 0 and config.inputMode == pimFile:
         config.projectName = unixToNativePath(p.key)
-      config.arguments = cmdLineRest(p)
+      config.arguments = remainingArgs(p)
       result = true
   inc argsCount
 

@@ -1228,7 +1228,7 @@ proc parseArgs(execState: var Execution, p: var OptParser): ParseCliResult =
   else:
     return parseQuitWithUsage
 
-  execState.userTestOptions = p.cmdLineRest
+  execState.userTestOptions = p.remainingArgs
 
 proc main() =
   ## Define CLI Options/Args Parsing loops

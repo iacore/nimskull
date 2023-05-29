@@ -68,7 +68,7 @@ type
     vars: StringTableRef
     app: AppType
     nimExe: string
-    nimArgs: string
+    nimArgs: seq[string]
     debOpts: TDebOptions
     nimblePkgName: string
     binCat: set[FileCategory] ## Extra binary categories to pack into the archive
@@ -101,7 +101,7 @@ func iniConfigData(c: var ConfigData) =
   c.infile = ""
   c.mainfile = ""
   c.outdir = ""
-  c.nimArgs = ""
+  c.nimArgs = @[]
   c.libpath = ""
   c.innoSetupFlag = false
   c.installScript = false
@@ -195,7 +195,7 @@ proc parseCmdLine(c: var ConfigData) =
           else: quit(Usage)
       else:
         c.infile = addFileExt(key.string, "ini")
-        c.nimArgs = cmdLineRest(p).string
+        c.nimArgs = remainingArgs(p)
         break
     of cmdLongOption, cmdShortOption:
       case normalize(key.string)

@@ -221,10 +221,8 @@ type
     # 'active' configuration
     verbosity*: CompilerVerbosity     ## how verbose the compiler is
 
-    # 'arguments' aka a single string aka 'joining strings for external
-    # program is bad'
-    arguments*: string ## the arguments to be passed to the program that
-                       ## should be run
+    arguments*: seq[string]
+      ## the arguments to be passed to the program that should be run
 
     linesCompiled*: int   # all lines that have been compiled
     m*: MsgConfig

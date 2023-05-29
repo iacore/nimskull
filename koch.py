@@ -279,4 +279,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except subprocess.CalledProcessError as e:
+        print(file=sys.stderr)
+        print(e, file=sys.stderr)
+        sys.exit(e.returncode)

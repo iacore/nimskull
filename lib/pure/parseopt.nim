@@ -323,30 +323,8 @@ proc next*(p: var OptParser) {.rtl, extern: "npo$1".} =
     inc p.idx
     p.pos = 0
 
-when declared(quoteShellCommand):
-  proc cmdLineRest*(p: OptParser): string {.rtl, extern: "npo$1".} =
-    ## Retrieves the rest of the command line that has not been parsed yet.
-    ##
-    ## See also:
-    ## * `remainingArgs proc<#remainingArgs,OptParser>`_
-    ##
-    ## **Examples:**
-    ##
-    ## .. code-block::
-    ##   var p = initOptParser(["--left", "-r:2", "--", "foo.txt", "bar.txt"])
-    ##   while true:
-    ##     p.next()
-    ##     if p.kind == cmdLongOption and p.key == "":  # Look for "--"
-    ##       break
-    ##     else: continue
-    ##   doAssert p.cmdLineRest == "foo.txt bar.txt"
-    result = p.cmds[p.idx .. ^1].quoteShellCommand
-
 proc remainingArgs*(p: OptParser): seq[string] {.rtl, extern: "npo$1".} =
   ## Retrieves a sequence of the arguments that have not been parsed yet.
-  ##
-  ## See also:
-  ## * `cmdLineRest proc<#cmdLineRest,OptParser>`_
   ##
   ## **Examples:**
   ##
@@ -358,8 +336,7 @@ proc remainingArgs*(p: OptParser): seq[string] {.rtl, extern: "npo$1".} =
   ##       break
   ##     else: continue
   ##   doAssert p.remainingArgs == @["foo.txt", "bar.txt"]
-  result = @[]
-  for i in p.idx..<p.cmds.len: result.add p.cmds[i]
+  p.cmds[p.idx .. ^1]
 
 iterator getopt*(p: var OptParser): tuple[kind: CmdLineKind, key,
     val: string] =
