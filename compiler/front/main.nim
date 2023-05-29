@@ -312,7 +312,7 @@ proc hashMainCompilationParams*(conf: ConfigRef): string =
   var state = newSha1State()
   with state:
     update os.getAppFilename() # nim compiler
-    update conf.commandLine # excludes `arguments`, as it should
+    update conf.commandArgsForHash # excludes `arguments`, as it should
     update $conf.projectFull # so that running `nim r main` from 2 directories caches differently
   result = $SecureHash(state.finalize())
 

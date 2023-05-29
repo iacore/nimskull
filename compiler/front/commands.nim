@@ -415,18 +415,13 @@ proc writeVersionInfo(conf: ConfigRef) =
     commitMsg &
     "\nactive boot switches:" & bootSwitchesMsg
 
-proc processCmdLine*(pass: TCmdLinePass, cmd: string; config: ConfigRef) =
+proc processCmdLine*(pass: TCmdLinePass, args: openArray[string]; config: ConfigRef) =
   ## Process input command-line parameters into `config` settings. Input is
   ## a joined list of command-line arguments with multiple options and/or
   ## configurations.
   var
-    p = parseopt.initOptParser(cmd) # xxx: `cmd` is always empty, this relies
-                                    #      on `parseOpt` using `os` to get the
-                                    #      cli params
+    p = parseopt.initOptParser(args)
     argsCount = 0
-
-  config.commandLine.setLen 0
-    # bugfix: otherwise, config.commandLine ends up duplicated
 
   template expectNoArg(f: CliFlagKind, flg, arg: string) =
     if arg != "":
@@ -443,16 +438,6 @@ proc processCmdLine*(pass: TCmdLinePass, cmd: string; config: ConfigRef) =
     case p.kind
     of cmdEnd: break
     of cmdLongOption, cmdShortOption:
-      config.commandLine.add:
-        case p.kind
-        of cmdShortOption: " -"
-        of cmdLongOption:  " --"
-        else: unreachable()
-      config.commandLine.add p.key.quoteShell # quoteShell to be future proof
-      if p.val.len > 0:
-        config.commandLine.add ':'
-        config.commandLine.add p.val.quoteShell
-
       # this only happens in passCmd1 as each of these triggers a quit
       case p.key.normalize
       of "version", "v":
@@ -504,15 +489,12 @@ proc processCmdLine*(pass: TCmdLinePass, cmd: string; config: ConfigRef) =
           for e in procSwitchResultToEvents(config, pass, p.key, p.val, res):
             config.cliEventLogger(e)
     of cmdArgument:
-      config.commandLine.add " "
-      config.commandLine.add p.key.quoteShell
       if processArgument(pass, p, argsCount, config):
         break
 
   if pass == passCmd2:
     if {optRun, optWasNimscript} * config.globalOptions == {} and
-        config.arguments.len > 0 and config.cmd notin {
-          cmdTcc, cmdNimscript, cmdCrun}:
+        config.arguments.len > 0 and config.cmd notin {cmdTcc, cmdNimscript, cmdCrun}:
       config.cliEventLogger:
         CliEvent(kind: cliEvtErrUnexpectedRunOpt,
                   cmd: config.command,

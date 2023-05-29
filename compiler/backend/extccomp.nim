@@ -933,7 +933,7 @@ proc writeJsonBuildInstructions*(conf: ConfigRef) =
     configFiles: conf.configFiles.mapIt(it.string),
     currentDir: getCurrentDir())
   if optRun in conf.globalOptions or isDefined(conf, "nimBetterRun"):
-    bcache.cmdline = conf.commandLine
+    bcache.cmdline = conf.commandArgsForHash
     bcache.depfiles = collect(for it in conf.m.fileInfos:
       let path = it.fullPath.string
       if isAbsolute(path): # TODO: else?
@@ -953,7 +953,7 @@ proc changeDetectedViaJsonBuildInstructions*(conf: ConfigRef; jsonFile: Absolute
   if bcache.currentDir != getCurrentDir() or # fixes bug #16271
      bcache.configFiles != conf.configFiles.mapIt(it.string) or
      bcache.cacheVersion != cacheVersion or bcache.outputFile != conf.absOutFile.string or
-     bcache.cmdline != conf.commandLine or bcache.nimexe != hashNimExe() or
+     bcache.cmdline != conf.commandArgsForHash or bcache.nimexe != hashNimExe() or
      bcache.inputMode != conf.inputMode: return true
   if bcache.inputMode != pimFile: return true
     # xxx optimize by returning false if stdin input was the same
