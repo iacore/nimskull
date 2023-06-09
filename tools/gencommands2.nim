@@ -84,10 +84,10 @@ type
     cmdSwitchErrormax
     cmdSwitchVerbosity
     cmdSwitchParallelbuild
-    # cmdSwitchVersion      # CLI only, forces a quit
-    # cmdSwitchAdvanced     # CLI only, forces a quit
-    # cmdSwitchFullhelp     # CLI only, forces a quit
-    # cmdSwitchHelp         # CLI only, forces a quit
+    cmdSwitchVersion      # CLI only, forces a quit
+    cmdSwitchAdvanced     # CLI only, forces a quit
+    cmdSwitchFullhelp     # CLI only, forces a quit
+    cmdSwitchHelp         # CLI only, forces a quit
     cmdSwitchIncremental
     cmdSwitchSkipcfg
     cmdSwitchSkipprojcfg
@@ -100,7 +100,7 @@ type
     cmdSwitchCc
     cmdSwitchStdout
     cmdSwitchFilenames
-    # cmdSwitchMsgformat    # CLI only
+    cmdSwitchMsgformat    # CLI only
     cmdSwitchProcessing
     cmdSwitchUnitsep
     cmdSwitchListfullpaths
@@ -210,12 +210,12 @@ type
     fullSwitchTxtErrormax            = "errormax"
     fullSwitchTxtVerbosity           = "verbosity"
     fullSwitchTxtParallelbuild       = "parallelbuild"
-    # fullSwitchTxtVersion             = "version"
-    # smolSwitchTxtVersion             = "v"
-    # fullSwitchTxtAdvanced            = "advanced"
-    # fullSwitchTxtFullhelp            = "fullhelp"
-    # fullSwitchTxtHelp                = "help"
-    # smolSwitchTxtHelp                = "h"
+    fullSwitchTxtVersion             = "version"
+    smolSwitchTxtVersion             = "v"
+    fullSwitchTxtAdvanced            = "advanced"
+    fullSwitchTxtFullhelp            = "fullhelp"
+    fullSwitchTxtHelp                = "help"
+    smolSwitchTxtHelp                = "h"
     fullSwitchTxtIncremental         = "incremental"
     aliasSwitchTxtIncremental        = "ic'"
     fullSwitchTxtSkipcfg             = "skipcfg"
@@ -229,7 +229,7 @@ type
     fullSwitchTxtCc                  = "cc"
     fullSwitchTxtStdout              = "stdout"
     fullSwitchTxtFilenames           = "filenames"
-    # fullSwitchTxtMsgformat           = "msgformat"
+    fullSwitchTxtMsgformat           = "msgformat"
     fullSwitchTxtProcessing          = "processing"
     fullSwitchTxtUnitsep             = "unitsep"
     fullSwitchTxtListfullpaths       = "listfullpaths"
@@ -340,10 +340,10 @@ const
       cmdSwitchErrormax           : {fullSwitchTxtErrormax},
       cmdSwitchVerbosity          : {fullSwitchTxtVerbosity},
       cmdSwitchParallelbuild      : {fullSwitchTxtParallelbuild},
-      # cmdSwitchVersion            : {fullSwitchTxtVersion, smolSwitchTxtVersion},
-      # cmdSwitchAdvanced           : {fullSwitchTxtAdvanced},
-      # cmdSwitchFullhelp           : {fullSwitchTxtFullhelp},
-      # cmdSwitchHelp               : {fullSwitchTxtHelp, smolSwitchTxtHelp},
+      cmdSwitchVersion            : {fullSwitchTxtVersion, smolSwitchTxtVersion},
+      cmdSwitchAdvanced           : {fullSwitchTxtAdvanced},
+      cmdSwitchFullhelp           : {fullSwitchTxtFullhelp},
+      cmdSwitchHelp               : {fullSwitchTxtHelp, smolSwitchTxtHelp},
       cmdSwitchIncremental        : {fullSwitchTxtIncremental, aliasSwitchTxtIncremental},
       cmdSwitchSkipcfg            : {fullSwitchTxtSkipcfg},
       cmdSwitchSkipprojcfg        : {fullSwitchTxtSkipprojcfg},
@@ -356,7 +356,7 @@ const
       cmdSwitchCc                 : {fullSwitchTxtCc},
       cmdSwitchStdout             : {fullSwitchTxtStdout},
       cmdSwitchFilenames          : {fullSwitchTxtFilenames},
-      # cmdSwitchMsgformat          : {fullSwitchTxtMsgformat},
+      cmdSwitchMsgformat          : {fullSwitchTxtMsgformat},
       cmdSwitchProcessing         : {fullSwitchTxtProcessing},
       cmdSwitchUnitsep            : {fullSwitchTxtUnitsep},
       cmdSwitchListfullpaths      : {fullSwitchTxtListfullpaths},
@@ -387,30 +387,45 @@ const
     ]
 
 type
-  SwitchKind* {.pure.} = enum
-    how_do_i_know
-    set_true
-    set_false
-    boolean
-
-  Switch* = object
-    legacyName*: string
+  CliOptDef* = object
+    name*: string
     ## if empty, then it doesn't have short version
     short*: string
     ## if empty, then it doesn't have long version
     long*: string
 
-    case kind*: SwitchKind
-    of how_do_i_know:
-      discard
-    of set_true:
-      discard
-    of set_false:
-      discard
-    of boolean:
-      booleanDefault*: bool
-
 import std/strformat
+
+proc print_switch(switch: CliOptDef) =
+  echo &"CliOptDef(name: {switch.name.repr},"
+  if switch.short.len != 0:
+    doAssert switch.short.len == 1
+    echo &"  short: some {switch.short[0].repr},"
+  if switch.long.len != 0:
+    echo &"  long: some {switch.long.repr},"
+  echo &"  kind: CliOptKind.set, ),"
+
+echo """
+# DO NOT EDIT. generated with 'nim r tools/gencommands2.nim > compiler/front/commands2.nim'
+
+import std/options
+
+type
+  CliOptKind* {.pure.} = enum
+    set # set or unset
+    boolean # --foo:on and --foo:off
+
+  CliOptDef* = object
+    name*: string
+    ## if empty, then it doesn't have short version
+    short*: Option[char]
+    ## if empty, then it doesn't have long version
+    long*: Option[string]
+    ## what kind of switch it is
+    kind*: CliOptKind
+
+const allCliOptions* = [
+"""
 
 for cmd, txts in cmdSwitchToTxt.pairs:
   const prefix = "cmdSwitch"
@@ -418,7 +433,7 @@ for cmd, txts in cmdSwitchToTxt.pairs:
   doAssert name[0..<prefix.len] == prefix
   let name_stripped = name[prefix.len..^1]
   
-  var switch = Switch(legacyName: name_stripped)
+  var switch = CliOptDef(name: name_stripped)
   
   for txt in txts:
     let switchtext = $txt
@@ -428,22 +443,7 @@ for cmd, txts in cmdSwitchToTxt.pairs:
       switch.short = switchtext
     else:
       switch.long = switchtext
+  
+  print_switch(switch)
 
-  echo &"Switch(legacyName: {switch.legacyName.repr},"
-  if switch.short.len != 0:
-    echo &"  short: {switch.short.repr},"
-  if switch.long.len != 0:
-    echo &"  long: {switch.long.repr},"
-  echo &"  kind: {switch.kind}, ),"
-
-# let bar: Switch = Switch( legacyName: "Warnings",
-#   short: "w",
-#   long: "warnings",
-#   kind: how_do_i_know,)
-
-# let foo: seq[Switch] = @[
-#   Switch(legacyName: "Deepcopy", long: "deepcopy", kind: how_do_i_know),
-#   Switch(legacyName: "ProjStdin", short: "", long: "", kind: how_do_i_know),
-#   Switch(legacyName: "Cmdexitgcstats", short: "", long: "cmdexitgcstats", kind: how_do_i_know),
-#   Switch(legacyName: "ConfigVar", short: "", long: "*.*", kind: how_do_i_know),
-# ]
+echo "]"
