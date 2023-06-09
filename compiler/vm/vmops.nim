@@ -187,7 +187,6 @@ when defined(nimHasInvariant):
     of SingleValueSetting.projectPath: result = conf.projectPath.string
     of SingleValueSetting.projectFull: result = conf.projectFull.string
     of SingleValueSetting.command: result = conf.command
-    of SingleValueSetting.commandLine: result = conf.commandLine
     of SingleValueSetting.linkOptions: result = conf.linkOptions
     of SingleValueSetting.compileOptions: result = conf.compileOptions
     of SingleValueSetting.ccompilerPath: result = conf.cCompilerPath

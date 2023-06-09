@@ -25,7 +25,6 @@ type
     projectFull,      ## the full path to the project that is being compiled
     command,          ## experimental: the command (e.g. 'c', 'doc') passed to
                       ## the Nim compiler
-    commandLine,      ## experimental: the command line passed to Nim
     linkOptions,      ## additional options passed to the linker
     compileOptions,   ## additional options passed to the C compiler
     ccompilerPath     ## the path to the C compiler

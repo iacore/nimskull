@@ -266,7 +266,6 @@ type
                                     ## altered by `nimconf` as needed
     command*: string                ## the main command (e.g. cc, check, scan, etc)
     commandArgs*: seq[string]       ## any arguments after the main command
-    commandLine*: string
     extraCmds*: seq[string]        ## for writeJsonBuildInstructions
     keepComments*: bool            ## whether the parser needs to keep comments
     docSeeSrcUrl*: string          ## if empty, no seeSrc will be
@@ -474,6 +473,9 @@ proc modifiedyNotes*(conf: ConfigRef): ReportKinds =
 proc cmdlineNotes*(conf: ConfigRef): ReportKinds =
   ## Get list of report filters modified from the command line
   conf.active.noteSets[cnCmdline]
+
+proc commandArgsForHash*(conf: ConfigRef): string =
+  conf.commandArgs.join("\0")
 
 proc foreignPackageNotes*(conf: ConfigRef): ReportKinds =
   ## Get list of reports for foreign packages
