@@ -11,7 +11,8 @@
 
 import
   compiler/ast/[
-    ast
+    ast,
+    renderer,
   ],
   compiler/modules/[
     modulepaths,
@@ -48,12 +49,16 @@ proc addDotDependency(c: PPassContext, n: PNode): PNode =
   let b = Backend(g.graph.backend)
   case n.kind
   of nkImportStmt:
+    # echo "nkImportStmt: ", n.renderTree
     for i in 0..<n.len:
-      var imported = getModuleName(g.config, n[i])
-      addDependencyAux(b, g.module.name.s, imported)
-  of nkFromStmt, nkImportExceptStmt:
-    var imported = getModuleName(g.config, n[0])
-    addDependencyAux(b, g.module.name.s, imported)
+      echo "nkImportStmt: ", i, " ", g.module.name.s, " ", n[i].renderTree
+    #   addDependencyAux(b, g.module.name.s, imported)
+  of nkFromStmt:
+    echo "nkFromStmt: ", g.module.name.s, " ", n[0].renderTree
+  of nkImportExceptStmt:
+    echo "nkImportExceptStmt: ", g.module.name.s, " ", n[0].renderTree
+    # var imported = getModuleName(g.config, n[0])
+    # addDependencyAux(b, g.module.name.s, imported)
   of nkStmtList, nkBlockStmt, nkStmtListExpr, nkBlockExpr:
     for i in 0..<n.len: discard addDotDependency(c, n[i])
   else:

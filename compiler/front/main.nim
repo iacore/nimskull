@@ -157,13 +157,6 @@ proc commandGenDepend(graph: ModuleGraph) =
   let project = graph.config.projectFull
   writeDepsFile(graph)
   generateDot(graph, project)
-  let cmd = "dot -Tpng -o$1 $2" %
-                [project.changeFileExt("png").string,
-                project.changeFileExt("dot").string]
-  graph.config.logExecStart(cmd)
-  let code = execCmd(cmd)
-  if code != 0:
-    graph.config.logError(execExternalProgramFailedMsg(cmd, code))
 
 proc commandCheck(graph: ModuleGraph) =
   let conf = graph.config
