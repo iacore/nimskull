@@ -42,18 +42,24 @@ proc addDependencyAux(b: Backend; importing, imported: string) =
   b.dotGraph.addf("\"$1\" -> \"$2\";$n", [rope(importing), rope(imported)])
   # s1 -> s2_4[label="[0-9]"];
 
+proc getModuleFileName(config: ConfigRef, n: PNode): string =
+  # todo: how to get filename, not module name?
+  getModuleName(config, n)
+
 proc addDotDependency(c: PPassContext, n: PNode): PNode =
   result = n
   let g = PGen(c)
   let b = Backend(g.graph.backend)
+  # let current = g.config.toFilename(g.module.fileIdx)
+  let current = g.config.toFilename(g.module.fileIdx)
   case n.kind
   of nkImportStmt:
     for i in 0..<n.len:
-      var imported = getModuleName(g.config, n[i])
-      addDependencyAux(b, g.module.name.s, imported)
+      var imported = getModuleFileName(g.config, n[i])
+      addDependencyAux(b, current, imported)
   of nkFromStmt, nkImportExceptStmt:
-    var imported = getModuleName(g.config, n[0])
-    addDependencyAux(b, g.module.name.s, imported)
+    var imported = getModuleFileName(g.config, n[0])
+    addDependencyAux(b, current, imported)
   of nkStmtList, nkBlockStmt, nkStmtListExpr, nkBlockExpr:
     for i in 0..<n.len: discard addDotDependency(c, n[i])
   else:

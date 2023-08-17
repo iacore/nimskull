@@ -253,11 +253,7 @@ proc isUnresolvedStatic*(t: PType): bool =
 
 template fileIdx*(c: PSym): FileIndex =
   assert c.kind == skModule, "this should be used only on module symbols"
-  c.position.FileIndex
-
-template filename*(c: PSym): string =
-  assert c.kind == skModule, "this should be used only on module symbols"
-  c.position.FileIndex.toFilename
+  FileIndex(c.position)
 
 
 func lastSon*(n: Indexable): Indexable =
