@@ -27,6 +27,7 @@ import
 from std/os import `/`, createDir, dirExists
 from std/strutils import `%`, addf, align, alignLeft, repeat, endsWith,
                          multiReplace
+from std/marshal import `$$`
 from experimental/colortext import `+`,
                                    ForegroundColor,
                                    ColText,
@@ -420,7 +421,9 @@ proc outputTrace*(conf: ConfigRef, t: CompilerTrace) =
     var indent {.global.}: int
     if t.kind == compilerTraceStep:
       indent = t.semstep.level
-    echo conf.generateOutput(t)
+    # traceFile = open(path, fmWrite)
+    echo $$t
+    # echo conf.generateOutput(t)
 
 proc isCompilerDebug*(conf: ConfigRef): bool {.inline.} =
   ##[
