@@ -166,18 +166,6 @@ proc newDefaultCall(info: TLineInfo, typ: PType): CgNode =
   ## Produces the tree for a ``default`` magic call.
   newExpr(cnkCall, info, typ, [newMagicNode(mDefault, info)])
 
-proc wrapInHiddenAddr(cl: TranslateCl, n: CgNode): CgNode =
-  ## Restores the ``cnkHiddenAddr`` around lvalue expressions passed to ``var``
-  ## parameters. The code-generators operating on ``CgNode``-IR depend on the
-  ## hidden addr to be present
-  if n.typ.skipTypes(abstractInst).kind != tyVar:
-    newOp(cnkHiddenAddr, n.info, makeVarType(cl.owner, n.typ, cl.idgen), n)
-  else:
-    # XXX: is this case ever reached? It should not be. Raw ``var`` values
-    #      must never be passed directly to ``var`` parameters at the MIR
-    #      level
-    n
-
 proc genObjConv(n: CgNode, to: PType, info: TLineInfo): CgNode =
   ## Depending on the type relationship between `n` and `to`, wraps `n` in
   ## either an up- or down-conversion. Returns `nil` if no up- or down-
@@ -419,7 +407,10 @@ proc callToIr(tree: MirBody, cl: var TranslateCl, n: MirNode,
         # XXX: prevent this case from happening
         arg = newOp(cnkDerefView, arg.info, arg.typ.base, arg)
     elif mutable:
-      arg = wrapInHiddenAddr(cl, arg)
+      # much like in PNode AST, the CGIR AST also needs a ``cnkHiddenAddr``
+      # tree wrapped around expressions in var argument positions
+      arg = newOp(cnkHiddenAddr, arg.info,
+                  makeVarType(cl.owner, arg.typ, cl.idgen), arg)
 
     result.add arg
 
