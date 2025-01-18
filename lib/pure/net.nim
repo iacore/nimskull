@@ -1911,15 +1911,14 @@ proc `$`*(address: IpAddress): string =
 
           printedLastGroup = true
 
-proc dial*(address: string, port: Port,
+proc dial*(address: string, port: Port, sockType: SockType,
            protocol = IPPROTO_DEFAULT, buffered = true): owned(Socket)
            {.tags: [ReadIOEffect, WriteIOEffect].} =
   ## Establishes connection to the specified `address`:`port` pair via the
-  ## specified protocol. The procedure iterates through possible
+  ## specified socket type and protocol. The procedure iterates through possible
   ## resolutions of the `address` until it succeeds, meaning that it
   ## seamlessly works with both IPv4 and IPv6.
   ## Returns Socket ready to send or receive data.
-  let sockType = protocol.toSockType()
 
   let aiList = getAddrInfo(address, port, AF_UNSPEC, sockType, protocol)
 

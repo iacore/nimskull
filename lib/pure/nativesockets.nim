@@ -195,15 +195,6 @@ else:
     else:
       result = cint(ord(p))
 
-proc toSockType*(protocol: Protocol): SockType =
-  result = case protocol
-  of IPPROTO_TCP:
-    SOCK_STREAM
-  of IPPROTO_UDP:
-    SOCK_DGRAM
-  of IPPROTO_IP, IPPROTO_IPV6, IPPROTO_RAW, IPPROTO_ICMP, IPPROTO_ICMPV6:
-    SOCK_RAW
-
 proc getProtoByName*(name: string): int {.since: (1, 3, 5).} =
   ## Returns a protocol code from the database that matches the protocol `name`.
   when useWinVersion:
